@@ -8,6 +8,7 @@ import math
 from load_data import LoadData
 from msssim import MSSSIM
 from model import PyNET
+import quantization
 
 np.random.seed(0)
 torch.manual_seed(0)
@@ -15,6 +16,8 @@ torch.manual_seed(0)
 # Path to the dataset:
 dataset_dir = 'raw_images/'
 TEST_SIZE = 1204
+#TEST_SIZE = 204
+
 
 
 def evaluate_accuracy():
@@ -34,7 +37,14 @@ def evaluate_accuracy():
 
     model = PyNET(level=0, instance_norm=True, instance_norm_level_1=True).to(device)
     model = torch.nn.DataParallel(model)
-    model.load_state_dict(torch.load("models/original/pynet_level_0.pth"), strict=True)
+    #model.load_state_dict(torch.load("models/original/pynet_level_0.pth"), strict=True)
+    model.load_state_dict(torch.load("models/pynet_level_0_epoch_48.pth"), strict=True)
+
+    en_quantization = 1
+
+    if (en_quantization == 1):
+        print("run quantization")
+        quantization.model_quantization(model)
 
     # Define the losses
 
@@ -49,6 +59,7 @@ def evaluate_accuracy():
 
         test_iter = iter(test_loader)
         for j in range(len(test_loader)):
+#            print("==>", j)
 
             x, y = next(test_iter)
             x = x.to(device, non_blocking=True)
@@ -72,4 +83,3 @@ def evaluate_accuracy():
 
 if __name__ == '__main__':
     evaluate_accuracy()
-

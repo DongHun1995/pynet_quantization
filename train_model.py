@@ -28,8 +28,8 @@ dslr_scale = float(1) / (2 ** (level - 1))
 
 # Dataset size
 
-TRAIN_SIZE = 46839
-TEST_SIZE = 1204
+TRAIN_SIZE = 22861 #24161          #46839
+TEST_SIZE = 1300 #2258            #1204
 
 
 def train_model():
@@ -39,18 +39,22 @@ def train_model():
 
     print("CUDA visible devices: " + str(torch.cuda.device_count()))
     print("CUDA Device Name: " + str(torch.cuda.get_device_name(device)))
+    print("dataset_dir = " + dataset_dir)
 
     # Creating dataset loaders
 
+    #dataset은 image가 저장된 경로로 부터 tensor로 바꿔주는거고
     train_dataset = LoadData(dataset_dir, TRAIN_SIZE, dslr_scale, test=False)
+    #DataLoader는 tensor로 넘어온 dataset을 batch_size나 shuffle등으로 전처리 해주는거
     train_loader = DataLoader(dataset=train_dataset, batch_size=batch_size, shuffle=True, num_workers=1,
                               pin_memory=True, drop_last=True)
-
+    
     test_dataset = LoadData(dataset_dir, TEST_SIZE, dslr_scale, test=True)
     test_loader = DataLoader(dataset=test_dataset, batch_size=1, shuffle=False, num_workers=1,
                              pin_memory=True, drop_last=False)
 
     visual_dataset = LoadVisualData(dataset_dir, 10, dslr_scale, level)
+
     visual_loader = DataLoader(dataset=visual_dataset, batch_size=1, shuffle=False, num_workers=0,
                                pin_memory=True, drop_last=False)
 
@@ -74,15 +78,17 @@ def train_model():
     MS_SSIM = MSSSIM()
 
     # Train the network
-
+    # 몇번 epoch를 도는가
     for epoch in range(num_train_epochs):
 
         torch.cuda.empty_cache()
-
+        #train_loader의 데이터를 반복가능한 객체로 변경해주는게 iter
         train_iter = iter(train_loader)
+        #train_loader에 있는 만큼 반복
         for i in range(len(train_loader)):
 
             optimizer.zero_grad()
+
             x, y = next(train_iter)
 
             x = x.to(device, non_blocking=True)
@@ -195,4 +201,3 @@ def train_model():
 
 if __name__ == '__main__':
     train_model()
-
